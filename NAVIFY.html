@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <div class="flex flex-wrap gap-2 mb-4">
+    <select id="start-select" class="border rounded px-2 py-1 mr-2">
+      <option value="">Select Start</option>
+      <!-- JS will populate options -->
+    </select>
+    <select id="end-select" class="border rounded px-2 py-1 mr-2">
+      <option value="">Select Destination</option>
+      <!-- JS will populate options -->
+    </select>
+    <button id="find-path-btn" class="bg-primary text-white px-4 py-2 rounded">Find Path</button>
+  </div>
+  
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Campus Map | Campus Navigator</title>
+  <!-- Tailwind CSS for utility-first styling -->
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <!-- Leaflet CSS & JS for mapping -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Remixicon for icons -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet"/>
+  <!-- Google Fonts for branding -->
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet"/>
+  <style>
+    body { font-family: 'Inter', sans-serif; color: #2C3E50; }
+    .map-container { position: relative; }
+    #map { width: 100%; height: 500px; }
+    .search-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);}
+    .location-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);}
+    .text-primary { color: #2563eb !important; }
+    .bg-primary { background-color: #2563eb !important; }
+    .border-primary { border-color: #2563eb !important; }
+  </style>
+</head>
+<body class="bg-white min-h-screen">
+  <!-- Header -->
+  
+  <header class="bg-white shadow-sm">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center">
+        <a href="#" class="text-3xl font-['Pacifico'] text-primary">Campus Navigator</a>
+      </div>
+    </div>
+  </header>
+  <main class="container mx-auto px-4 py-8">
+    <div class="max-w-5xl mx-auto">
+      <!-- Page Title -->
+      <div class="mb-8 text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Campus Map</h1>
+        <p class="text-gray-600">Find your way around our university campus with ease</p>
+      </div>
+      <!-- Filter Pills -->
+      <div class="mb-6 flex flex-wrap gap-2">
+        <button class="bg-primary text-white px-4 py-2 !rounded-full whitespace-nowrap flex items-center text-sm">
+          <div class="w-5 h-5 flex items-center justify-center mr-1"><i class="ri-building-line"></i></div>
+          All Buildings
+        </button>
+        <button class="bg-[#EBF5FB] text-gray-700 hover:bg-primary hover:text-white px-4 py-2 !rounded-full whitespace-nowrap flex items-center text-sm">
+          <div class="w-5 h-5 flex items-center justify-center mr-1"><i class="ri-presentation-line"></i></div>
+          Academic Blocks
+        </button>
+        <button class="bg-[#EBF5FB] text-gray-700 hover:bg-primary hover:text-white px-4 py-2 !rounded-full whitespace-nowrap flex items-center text-sm">
+          <div class="w-5 h-5 flex items-center justify-center mr-1"><i class="ri-mic-line"></i></div>
+          Auditorium
+        </button>
+        <button class="bg-[#EBF5FB] text-gray-700 hover:bg-primary hover:text-white px-4 py-2 !rounded-full whitespace-nowrap flex items-center text-sm">
+          <div class="w-5 h-5 flex items-center justify-center mr-1"><i class="ri-parking-line"></i></div>
+          Parking
+        </button>
+        <button class="bg-[#EBF5FB] text-gray-700 hover:bg-primary hover:text-white px-4 py-2 !rounded-full whitespace-nowrap flex items-center text-sm">
+          <div class="w-5 h-5 flex items-center justify-center mr-1"><i class="ri-home-4-line"></i></div>
+          Hostels
+        </button>
+        <button class="bg-[#EBF5FB] text-gray-700 hover:bg-primary hover:text-white px-4 py-2 !rounded-full whitespace-nowrap flex items-center text-sm">
+          <div class="w-5 h-5 flex items-center justify-center mr-1"><i class="ri-book-open-line"></i></div>
+          Library
+        </button>
+        <button class="bg-[#EBF5FB] text-gray-700 hover:bg-primary hover:text-white px-4 py-2 !rounded-full whitespace-nowrap flex items-center text-sm">
+          <div class="w-5 h-5 flex items-center justify-center mr-1"><i class="ri-restaurant-line"></i></div>
+          Cafeteria
+        </button>
+        <button class="bg-[#EBF5FB] text-gray-700 hover:bg-primary hover:text-white px-4 py-2 !rounded-full whitespace-nowrap flex items-center text-sm">
+          <div class="w-5 h-5 flex items-center justify-center mr-1"><i class="ri-basketball-line"></i></div>
+          Sports
+        </button>
+        <button class="bg-[#EBF5FB] text-gray-700 hover:bg-primary hover:text-white px-4 py-2 !rounded-full whitespace-nowrap flex items-center text-sm">
+          <div class="w-5 h-5 flex items-center justify-center mr-1"><i class="ri-heart-pulse-line"></i></div>
+          Health Centre
+        </button>
+        <button class="bg-[#EBF5FB] text-gray-700 hover:bg-primary hover:text-white px-4 py-2 !rounded-full whitespace-nowrap flex items-center text-sm">
+          <div class="w-5 h-5 flex items-center justify-center mr-1"><i class="ri-star-line"></i></div>
+          Others
+        </button>
+      </div>
+      <!-- Map and Results Container -->
+      <div class="flex flex-col md:flex-row gap-6">
+        <!-- Results List -->
+        <div class="w-full md:w-2/5 order-2 md:order-1">
+          <div class="bg-white rounded shadow-sm border border-gray-100 p-4">
+            <div class="space-y-3" id="location-list">
+              <!-- JS will fill this with building cards -->
+            </div>
+            <div class="mt-4 text-center">
+              <button id="toggle-show-btn" class="text-primary text-sm flex items-center mx-auto cursor-pointer select-none">
+                <span id="toggle-show-text">Show more results</span>
+                <div id="toggle-show-icon" class="w-4 h-4 flex items-center justify-center ml-1">
+                  <i class="ri-arrow-down-s-line"></i>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Map -->
+        <div class="w-full md:w-3/5 order-1 md:order-2">
+          <div class="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
+            <div class="map-container">
+              <div id="map"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script>
+    // Example: Replace this with your actual building data JS file
+    // Each building: { name, lat, lng, category, description }
+    const buildings = [
+      { name: "Central Library", lat: 12.840999, lng: 80.154037, category: "Library", description: "Main campus library." },
+      { name: "AB1", lat: 12.843687, lng:  80.153544, category: "Academic Blocks", description: "Academic Block 1." },
+      { name: "AB2", lat: 12.842696, lng: 80.156533, category: "Academic Blocks", description: "Academic Block 2." },
+      { name: "AB3", lat: 12.843786, lng: 80.154786, category: "Academic Blocks", description: "Academic Block 3." },
+      { name: "AB4", lat: 12.842981, lng: 80.155957, category: "Academic Blocks", description: "Academic Block 4." },
+      { name: "Delta Block", lat: 12.841020, lng: 80.156060, category: "Academic Blocks", description: "Delta Block." },
+      { name: "Sigma Block", lat: 12.844597, lng: 80.153540, category: "Academic Blocks", description: "Sigma Block." },
+      { name: "Admin Block", lat: 12.840541, lng: 80.153963, category: "Academic Blocks", description: "Administration Block." },
+      { name: "MG Auditorium", lat: 12.839552, lng:80.155040, category: "Auditorium", description: "Main auditorium." },
+      { name: "Parking Area 1", lat: 12.841114, lng: 80.153043, category: "Parking"},
+      { name: "Parking Area 2", lat: 12.840795, lng: 80.155417, category: "Parking"},
+      { name: "Parking Area 3", lat: 12.840288, lng: 80.155235, category: "Parking"},
+      { name: "Hostel Block A (Boys)", lat: 12.844364, lng: 80.152673, category: "Hostels"},
+      { name: "Hostel Block B (Girls)", lat: 12.842040, lng: 80.157062, category: "Hostels"},
+      { name: "Hostel Block C (Boys)", lat: 12.842882, lng: 80.157638, category: "Hostels"}, 
+      { name: "Hostel Block D1 (Boys)", lat: 12.843752, lng: 80.152099, category: "Hostels"},
+      { name: "Hostel Block D2 (Boys)", lat: 12.843745, lng: 80.151644, category: "Hostels"},
+      { name: "Health Centre", lat: 12.841397, lng: 80.156675, category: "Health Centre", description: "Health services available." },
+      { name: "Gazebo ", lat: 12.841525, lng: 80.154689, category: "Cafeteria"},
+      { name: "Lassi House", lat: 12.841485, lng: 80.155131, category: "Cafeteria"},
+      { name: "North Square", lat:12.844173, lng: 80.154201, category: "Cafeteria"},
+      { name: "Gymkhaaana", lat:12.843551, lng: 80.152607, category: "Cafeteria"},
+      { name: "Dominos", lat: 12.843808, lng: 80.152635, category: "Cafeteria"},
+
+      { name: "Basketball Court", lat:12.842461, lng: 80.153329, category: "Sports"},
+      { name: "Cricket Ground", lat: 12.842147, lng: 80.154942, category: "Sports"},
+      { name: "Football Ground", lat: 12.842450, lng: 80.153881, category: "Sports"},
+      { name: "Tennis Court", lat: 12.842915, lng:80.153115, category: "Sports"},
+     
+      { name: "MGR Statue", lat: 12.841658, lng: 80.154128, category: "Others"},
+      { name: "Clock Court", lat: 12.841164, lng: 80.154683, category: "Others"},
+
+    ];
+
+    // Category mapping
+    const buildingCategories = {
+      "All Buildings": buildings.map(b => b.name),
+      "Academic Blocks": buildings.filter(b => b.category === "Academic Blocks").map(b => b.name),
+      "Auditorium": buildings.filter(b => b.category === "Auditorium").map(b => b.name),
+      "Parking": buildings.filter(b => b.category === "Parking").map(b => b.name),
+      "Hostels": buildings.filter(b => b.category === "Hostels").map(b => b.name),
+      "Library": buildings.filter(b => b.category === "Library").map(b => b.name),
+      "Cafeteria": buildings.filter(b => b.category === "Cafeteria").map(b => b.name),
+      "Sports": buildings.filter(b => b.category === "Sports").map(b => b.name),
+      "Health Centre": buildings.filter(b => b.category === "Health Centre").map(b => b.name),
+      "Others": buildings.filter(b => b.category === "Others").map(b => b.name),
+    };
+
+    const locationList = document.getElementById('location-list');
+    const toggleBtn = document.getElementById('toggle-show-btn');
+    const toggleText = document.getElementById('toggle-show-text');
+    const toggleIcon = document.getElementById('toggle-show-icon');
+    const filterButtons = document.querySelectorAll('.flex.flex-wrap.gap-2 button');
+
+    let currentCategory = "All Buildings";
+    let expanded = false;
+
+    // Populate building cards
+    function renderBuildingCards(category) {
+      locationList.innerHTML = '';
+      const allowed = buildingCategories[category] || [];
+      buildings.forEach(b => {
+        const show = allowed.includes(b.name);
+        const card = document.createElement('div');
+        card.className = "location-card bg-white border border-gray-100 p-3 rounded transition-all duration-200 cursor-pointer hover:bg-[#EBF5FB]";
+        card.style.display = show ? '' : 'none';
+        card.dataset.filtered = show ? "true" : "false";
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-1">
+            <h4 class="font-medium text-primary">${b.name}</h4>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center text-xs text-gray-500">${b.description || ''}</div>
+            <div class="flex items-center text-xs text-primary">
+              <div class="w-4 h-4 flex items-center justify-center mr-1"><i class="ri-map-pin-line"></i></div>
+            </div>
+          </div>
+        `;
+        card.addEventListener('click', () => {
+          map.setView([b.lat, b.lng], 18, { animate: true });
+          L.popup()
+            .setLatLng([b.lat, b.lng])
+            .setContent(`<strong>${b.name}</strong><br>${b.description || ''}`)
+            .openOn(map);
+        });
+        locationList.appendChild(card);
+      });
+    }
+
+    // Show only first 5 cards, hide rest
+    function showLimitedCards() {
+      const cards = Array.from(locationList.querySelectorAll('.location-card'));
+      let shown = 0;
+      cards.forEach(card => {
+        if (card.dataset.filtered === "true") {
+          card.style.display = shown < 5 ? '' : 'none';
+          shown++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+      toggleText.textContent = 'Show more results';
+      toggleIcon.innerHTML = '<i class="ri-arrow-down-s-line"></i>';
+      toggleBtn.style.display = shown > 5 ? '' : 'none';
+      expanded = false;
+    }
+
+    // Show all filtered cards
+    function showAllCards() {
+      const cards = Array.from(locationList.querySelectorAll('.location-card'));
+      let any = false;
+      cards.forEach(card => {
+        if (card.dataset.filtered === "true") {
+          card.style.display = '';
+          any = true;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+      toggleText.textContent = 'Show less results';
+      toggleIcon.innerHTML = '<i class="ri-arrow-up-s-line"></i>';
+      toggleBtn.style.display = any ? '' : 'none';
+      expanded = true;
+    }
+
+    // Filter cards by category and reset to show limited cards
+    function filterBuildings(category) {
+      currentCategory = category;
+      renderBuildingCards(category);
+      showLimitedCards();
+    }
+
+    // Toggle button click handler
+    toggleBtn.addEventListener('click', () => {
+      if (expanded) {
+        showLimitedCards();
+      } else {
+        showAllCards();
+      }
+    });
+
+    // Filter buttons click handlers
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Update active button styling
+        filterButtons.forEach(b => {
+          b.classList.remove('bg-primary', 'text-white');
+          b.classList.add('bg-[#EBF5FB]', 'text-gray-700');
+        });
+        btn.classList.add('bg-primary', 'text-white');
+        btn.classList.remove('bg-[#EBF5FB]', 'text-gray-700');
+        filterBuildings(btn.textContent.trim());
+      });
+    });
+
+    // Initialize page: set first button active and show limited cards for "All Buildings"
+    window.addEventListener('DOMContentLoaded', () => {
+      filterBuildings("All Buildings");
+      filterButtons[0].classList.add('bg-primary', 'text-white');
+      filterButtons[0].classList.remove('bg-[#EBF5FB]', 'text-gray-700');
+
+      // Initialize Leaflet map
+      window.map = L.map('map').setView([12.840324, 80.153734], 17);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Add markers for all buildings
+      buildings.forEach(b => {
+        const marker = L.marker([b.lat, b.lng]).addTo(map);
+        marker.bindPopup(`<strong>${b.name}</strong><br>${b.description || ''}`);
+      });
+    });
+  </script>
+  <script src="info.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
